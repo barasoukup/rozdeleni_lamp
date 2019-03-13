@@ -1,0 +1,130 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Rozdělení lamp mezi strany</title>
+  <script src="http://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E=" crossorigin="anonymous"></script>
+  <script>
+    var p = 1;
+
+    function setNumberOfParties() {
+      p = $("#pocet_stran").val();
+      $("#div_strany").html("");
+      for (var i = 0; i < p; i++) {
+        append_text = `
+      <div class="strana">
+        Název strany: <br/>
+      <input type="text" id="nazevstrany_` + i.toString() + `" name="nazevstrany_` + i.toString() +
+          `"/> <br/>
+      Maximální požadovaný počet lamp: (-1 = nenastaveno)<br/>
+      <input type="number" id="max_pocet_` + i.toString() + `" name="max_pocet_` + i.toString() +
+          `" min="-1" max="999999" value="-1"><br/>
+      Požadované lampy (v pořadí dle preference, odděleny koncem řádku):<br/>
+      <textarea name="prefer_` + i.toString() + `" id="prefer_` + i.toString() +
+          `" rows="20" cols="25">
+</textarea>
+      </input>
+      </div> `;
+
+        $("#div_strany").append(append_text);
+      }
+      $("body").append('<button type="button" onclick="divide()">Rozdělit lampy</button><br/><div id="poradi"></div><br/><div id="prubeh"></div><br/><div id="vysledek"></div>');
+    }
+
+    function divide() {
+      var strany = [];
+
+      for (var i = 0; i < p; i++) {
+        max_pocet = $("#max_pocet_" + i.toString()).val();
+        if (max_pocet == -1) max_pocet = $("#prefer_" + i.toString()).val().split(/\n/).length;
+        strany.push({
+          "id": i,
+          "nazev": $("#nazevstrany_" + i.toString()).val(),
+          "max_pocet": max_pocet,
+          "prefer": $("#prefer_" + i.toString()).val().split(/\n/),
+          "prefer_pocet": $("#prefer_" + i.toString()).val().split(/\n/).length,
+          "pridelene": []
+        });
+      };
+      var sorted = strany.sort(function(s1, s2) {
+        if (s1.max_pocet != s2.max_pocet) {
+          if (s1.max_pocet > s2.max_pocet) return 1;
+          if (s1.max_pocet < s2.max_pocet) return -1;
+        }
+        if (s1.prefer_pocet > s2.prefer_pocet) return 1;
+        if (s1.prefer_pocet < s2.prefer_pocet) return -1;
+
+      });
+
+      $("#poradi").html("<b>Pořadí stran pro přidělování</b>:<br/>")
+      for (var i = 0; i < sorted.length; i++) {
+        $("#poradi").append((i + 1).toString() + ". " + sorted[i]["nazev"] + " - maximální požadovaný počet " + sorted[i]["max_pocet"].toString() + " Počet preferovaných " + sorted[i]["prefer_pocet"].toString() + "<br>");
+      }
+      $("#prubeh").html("<b>Průběh přiřazování</b>:<br/>");
+      var zmena = true;
+      var celkem_pridelene = [];
+
+      while (zmena) {
+        zmena = false;
+        for (var i = 0; i < sorted.length; i++) {
+          var nova_lampa = false;
+          $("#prubeh").append("Přiděluji stranu " + sorted[i]["nazev"] + "<br/>");
+          if (sorted[i]["max_pocet"] > sorted[i]["pridelene"].length) {
+            if (sorted[i]["prefer"].length == 0) {
+              $("#prubeh").append("Vyčerpány všechny preferované lampy strany.<br/>");
+            } else {
+              lampa = sorted[i]["prefer"].shift();
+              nova_lampa = true;
+              while (celkem_pridelene.indexOf(lampa) > -1) {
+                nova_lampa = false;
+                $("#prubeh").append("Lampa " + lampa + " již přidělena, zkouším další v pořadí.<br/>");
+                if (sorted[i]["prefer"].length == 0) {
+                  $("#prubeh").append("Vyčerpány všechny preferované lampy strany.<br/>");
+                  break;
+                } else {
+                  lampa = sorted[i]["prefer"].shift();
+                  nova_lampa = true;
+                }
+              }
+            }
+            if (nova_lampa) {
+              zmena = true;
+              celkem_pridelene.push(lampa);
+              sorted[i]["pridelene"].push(lampa);
+              $("#prubeh").append("Lampa " + lampa + " přidělena straně " + sorted[i]["nazev"]+"<br/>");
+            }
+          } else {
+            $("#prubeh").append("Strana má přidělený maximální počet lamp.<br/>");
+          }
+        }
+      }
+$("#vysledek").html("<b>Výsledek přiřazování</b>:<br/>");
+for (var i = 0; i < sorted.length; i++) {
+  $("#vysledek").append(sorted[i]["nazev"] + " - maximální požadovaný počet " + sorted[i]["max_pocet"].toString() + ", počet preferovaných " + sorted[i]["prefer_pocet"].toString() + ", vybráno: "+sorted[i]["pridelene"].toString()+"<br>");
+}
+    }
+  </script>
+  <style>
+    #div_strany {
+      overflow: hidden;
+    }
+
+    .strana {
+      float: left;
+      width: 200px;
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  Počet stran: <br/>
+  <input type="number" id="pocet_stran" name="pocet_stran" min="1" max="100" value="1">
+  </input>
+  <button type="button" onclick="setNumberOfParties()">Nastavit počet stran</button>
+  <div id="div_strany">
+  </div>
+
+</body>
+
+</html>
