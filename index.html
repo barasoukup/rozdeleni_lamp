@@ -28,7 +28,7 @@
 
         $("#div_strany").append(append_text);
       }
-      $("body").append('<button type="button" onclick="divide()">Rozdělit lampy</button><br/><div id="poradi"></div><br/><div id="prubeh"></div><br/><div id="vysledek"></div>');
+      $("#rozdelit").html('<button type="button" onclick="divide()">Rozdělit lampy</button><br/>');
     }
 
     function divide() {
@@ -124,6 +124,11 @@ for (var i = 0; i < sorted.length; i++) {
   <button type="button" onclick="setNumberOfParties()">Nastavit počet stran</button>
   <div id="div_strany">
   </div>
+  <div id="rozdelit"></div>
+  <div id="poradi"></div><br/>
+  <div id="prubeh"></div><br/>
+  <div id="vysledek"></div>
+
 
 </body>
 
